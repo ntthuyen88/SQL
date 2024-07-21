@@ -4,9 +4,9 @@
 
 # My Solution
 
-SQL file
+[https://github.com/ntthuyen88/SQL/blob/main/solution.sql](SQL file)
 
-# Explaination
+# Explanation
 
-[https://curious-verdict-47d.notion.site/Danny-s-Dinner-7f84ba63e6104991849d5311ade68170](https://curious-verdict-47d.notion.site/Danny-s-Dinner-7f84ba63e6104991849d5311ade68170)
+[https://curious-verdict-47d.notion.site/Danny-s-Dinner-7f84ba63e6104991849d5311ade68170](Explanation note)
 
