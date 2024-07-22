@@ -64,12 +64,13 @@ VALUES
 WITH cte AS
 (
   SELECT
-		customer_id,
-	 	product_name,
+	customer_id,
+	product_name,
   	order_date,
   	RANK() OVER(PARTITION by customer_id ORDER BY order_date) as ranking
   FROM sales
-  	JOIN menu ON menu.product_id = sales.product_id
+	JOIN menu
+	ON menu.product_id = sales.product_id
  )
   
  SELECT DISTINCT customer_id, product_name
@@ -81,27 +82,28 @@ SELECT
 	product_name,
 	COUNT(*) as times_purchased
 FROM sales
- JOIN menu
-	 ON menu.product_id = sales.product_id
+	JOIN menu
+	ON menu.product_id = sales.product_id
 GROUP BY product_name
 HAVING COUNT(*) = (SELECT COUNT(*) as times_purchased
-                   FROM sales JOIN menu ON menu.product_id = sales.product_id
-                   GROUP BY product_id 
-	                 ORDER BY times_purchased
-	                 DESC LIMIT 1);
+                   FROM dannys_diner.sales 
+                   JOIN dannys_diner.menu ON menu.product_id = sales.product_id
+                   GROUP BY sales.product_id
+                   ORDER BY times_purchased
+                   DESC LIMIT 1);
 
 -- 5 Which item was the most popular for each customer?
 WITH temple AS
 (
   SELECT
-		customer_id,
-		product_name,
-    COUNT (*) as times_purchased,
-    RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(*)) as ranking
-	FROM sales
-		JOIN menu
-			ON menu.product_id = sales.product_id
-	GROUP BY customer_id, product_name
+	customer_id,
+	product_name,
+	COUNT (*) as times_purchased,
+	RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(*)) as ranking
+FROM sales
+  JOIN menu
+  ON menu.product_id = sales.product_id
+  GROUP BY customer_id, product_name
 )
 
 SELECT
