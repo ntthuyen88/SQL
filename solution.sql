@@ -101,9 +101,9 @@ WITH temple AS
 	COUNT (*) as times_purchased,
 	RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(*)) as ranking
 FROM sales
-  JOIN menu
-  ON menu.product_id = sales.product_id
-  GROUP BY customer_id, product_name
+	JOIN menu
+	ON menu.product_id = sales.product_id
+	GROUP BY customer_id, product_name
 )
 
 SELECT
@@ -117,15 +117,17 @@ WHERE ranking = 1;
 WITH cte AS
 (
   SELECT
-		sales.customer_id,
+	sales.customer_id,
   	product_name,
   	order_date,
   	join_date,
   	RANK() OVER(PARTITION BY sales.customer_id ORDER BY order_date) as ranking
   FROM sales
-  	JOIN menu ON menu.product_id = sales.product_id
-  	JOIN members ON members.customer_id = sales.customer_id
-	WHERE order_date >= join_date
+	JOIN menu
+		ON menu.product_id = sales.product_id
+  	JOIN members
+		ON members.customer_id = sales.customer_id
+  WHERE order_date >= join_date
 )
 
 SELECT customer_id, product_name
@@ -133,18 +135,19 @@ FROM cte
 WHERE ranking = 1;
 
 -- 7 Which item was purchased just before the customer became a member?
-WITH cte AS
 (
   SELECT
-    sales.customer_id,
+	sales.customer_id,
   	product_name,
   	order_date,
   	join_date,
   	RANK() OVER(PARTITION BY sales.customer_id ORDER BY order_date DESC) as ranking
   FROM sales
-  	JOIN menu ON menu.product_id = sales.product_id
-  	JOIN members ON members.customer_id = sales.customer_id
-	WHERE order_date < join_date
+	JOIN menu
+		ON menu.product_id = sales.product_id
+  	JOIN members
+		ON members.customer_id = sales.customer_id
+  WHERE order_date < join_date
 )
 
 SELECT customer_id, product_name
@@ -153,44 +156,51 @@ WHERE ranking = 1;
 
 -- 8 What is the total items and amount spent for each member before they became a member?
 SELECT
-  sales.customer_id,
+	sales.customer_id,
 	COUNT(*) AS total_items,
-  SUM(price) AS amount_spent
+	SUM(price) AS amount_spent
 FROM sales
-	JOIN menu ON menu.product_id = sales.product_id
-	JOIN members ON members.customer_id = sales.customer_id
+	JOIN menu
+		ON menu.product_id = sales.product_id
+	JOIN members
+		ON members.customer_id = sales.customer_id
 WHERE order_date < join_date
 GROUP BY sales.customer_id
 ORDER BY sales.customer_id;
 
 -- 9 If each $1 spent equates to 10 points and sushi has a 2x points multipler - how many points would each customer have?
-SELECT customer_id,
+SELECT
+	customer_id,
 	SUM(CASE
         	WHEN product_name = 'sushi' THEN 20*price
         	ELSE 10*price
         END) as total_points
 FROM sales
-	LEFT JOIN menu on menu.product_id = sales.product_id
-group by customer_id
-order by customer_id;
+	LEFT JOIN menu
+		ON menu.product_id = sales.product_id
+GROUP BY customer_id
+ORDER BY customer_id;
 
 /* 10 In the first week after a customer joints the program (including their join date) the earn 2x points on all items, not just sushi.
 How many points do customer A and B have at the end of January?*/
 WITH cte AS
 (
 SELECT
-  sales.customer_id,
+	sales.customer_id,
 	product_name,
-  price,
-  order_date,
-  join_date,
+	price,
+	order_date,
+	join_date,
 	join_date + INTERVAL'6 day' as firstweek_ends_date
 FROM sales
-	JOIN menu ON menu.product_id = sales.product_id
-  JOIN members ON members.customer_id = sales.customer_id
+	JOIN menu
+		ON menu.product_id = sales.product_id
+	JOIN members
+		ON members.customer_id = sales.customer_id
 )
 
-SELECT customer_id,
+SELECT
+	customer_id,
 	SUM(CASE
         	WHEN product_name = 'sushi' THEN 20*price
         	WHEN order_date BETWEEN join_date AND firstweek_ends_date THEN 20*price
@@ -204,21 +214,21 @@ ORDER BY customer_id;
 -- Bonus Questions
 /* Join All The Things
 Recreate the given table output using the available data*/
-SELECT 
-  sales.customer_id, 
-  order_date,  
-  product_name, 
-  price,
-  CASE
-    WHEN join_date >= order_date THEN 'N'
-    WHEN join_date <= order_date THEN 'Y'
-    ELSE 'N'
-  END AS member_status
+SELECT
+	sales.customer_id,
+	order_date,
+	product_name,
+	price,
+	CASE
+		WHEN join_date >= order_date THEN 'N'
+		WHEN join_date <= order_date THEN 'Y'
+		ELSE 'N'
+	END as member_status
 FROM sales
 LEFT JOIN members
-  ON sales.customer_id = members.customer_id
+	ON sales.customer_id = members.customer_id
 JOIN menu
-  ON sales.product_id = menu.product_id
+	ON sales.product_id = menu.product_id
 ORDER BY sales.customer_id, order_date
 
 
@@ -229,26 +239,26 @@ when customers are not yet part of the loyalty program.*/
 WITH tmp AS
 (
 SELECT
-  sales.customer_id,
-  product_name,
-  CASE
-      WHEN order_date >= join_date THEN COUNT(*)
-  	  ELSE NULL
-  END as times_purchased
+	sales.customer_id,
+	product_name,
+	CASE
+		WHEN order_date >= join_date THEN COUNT(*)
+		ELSE NULL
+	END as times_purchased
 FROM sales
 	LEFT JOIN menu
-    ON menu.product_id = sales.product_id
-  LEFT JOIN members
-    ON members.customer_id = sales.customer_id
+		ON menu.product_id = sales.product_id
+	LEFT JOIN members
+		ON members.customer_id = sales.customer_id
 GROUP BY sales.customer_id, product_name, order_date, join_date
 )
 
 SELECT
-  customer_id,
+	customer_id,
 	product_name,
-    CASE
-   		WHEN times_purchased IS NULL THEN NULL
-    	ELSE DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY times_purchased DESC nulls LAST)
-    END as ranking
+	CASE
+		WHEN times_purchased IS NULL THEN NULL
+		ELSE DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY times_purchased DESC nulls LAST)
+	END as ranking
 FROM tmp;
 
