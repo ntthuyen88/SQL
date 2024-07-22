@@ -249,29 +249,30 @@ ORDER BY sales.customer_id, order_date
 Danny also requires further information about the ranking of customer products,
 but he purposely does not need the ranking for non-member purchases so he expects null ranking values for the records
 when customers are not yet part of the loyalty program.*/
-WITH tmp AS
+WITH cte AS
 (
 SELECT
 	sales.customer_id,
+	order_date,
 	product_name,
+	price,
 	CASE
-		WHEN order_date >= join_date THEN COUNT(*)
-		ELSE NULL
-	END as times_purchased
+		WHEN join_date > order_date THEN 'N'
+		WHEN join_date <= order_date THEN 'Y'
+		ELSE 'N'
+	END as member_status
 FROM sales
-	LEFT JOIN menu
-		ON menu.product_id = sales.product_id
-	LEFT JOIN members
-		ON members.customer_id = sales.customer_id
-GROUP BY sales.customer_id, product_name, order_date, join_date
+LEFT JOIN members
+	ON sales.customer_id = members.customer_id
+JOIN menu
+	ON sales.product_id = menu.product_id
+ORDER BY sales.customer_id, order_date
 )
 
-SELECT
-	customer_id,
-	product_name,
+SELECT *,
 	CASE
-		WHEN times_purchased IS NULL THEN NULL
-		ELSE DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY times_purchased DESC nulls LAST)
+		WHEN member_status = 'N' THEN NULL
+		ELSE RANK() OVER(PARTITION BY customer_id, member_status ORDER BY order_date)
 	END as ranking
-FROM tmp;
+FROM cte;
 
