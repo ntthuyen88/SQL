@@ -233,7 +233,7 @@ SELECT
 	product_name,
 	price,
 	CASE
-		WHEN join_date >= order_date THEN 'N'
+		WHEN join_date > order_date THEN 'N'
 		WHEN join_date <= order_date THEN 'Y'
 		ELSE 'N'
 	END as member_status
