@@ -57,8 +57,21 @@ VALUES
 
 -- QUESTIONS AND SOLUTIONS
 -- 1 What the total amount each customer spent at the restaurant?
-
+SELECT
+	customer_id,
+	SUM(price) as total_sales
+FROM menu
+	JOIN sales
+		ON menu.product_id = sales.product_id
+GROUP BY customer_id
+ORDER BY customer_id;
+	
 -- 2 How many days has each customer visited the restaurant?
+SELECT
+	customer_id,
+	COUNT(DISTINCT order_date) AS visit_count
+FROM sales
+GROUP BY customer_id;
 
 -- 3 What was the first item from the menu purchased by each customer?
 WITH cte AS
